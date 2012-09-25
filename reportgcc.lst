@@ -1,0 +1,7 @@
+tsc.c:42:20: error: malloc.h: No such file or directory
+cc1: warnings being treated as errors
+tsc.c: In function ‘set’:
+tsc.c:5398: warning: implicit declaration of function ‘memalign’
+tsc.c:5398: warning: cast to pointer from integer of different size
+tsc.c: In function ‘main’:
+tsc.c:5429: warning: cast to pointer from integer of different size
