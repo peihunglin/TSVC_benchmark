@@ -14,6 +14,13 @@ runnovec : tscnovec.o dummy.o
 runvec : tscvec.o dummy.o
 	$(CC) $(noopt) dummy.o tscvec.o -o runvec $(libs)
 
+runrose : tscrose.o dummy.o
+	$(CC) $(noopt) dummy.o tscrose.o -o runrose $(libs)
+
+tscrose.o : tsc_rose.c
+	rm -f report.lst
+	$(CC) $(flags) $(vecflags) -c -o tscrose.o tsc_rose.c  2> reportgcc.lst
+
 tscvec.o : tsc.c
 	rm -f report.lst
 	$(CC) $(flags) $(vecflags) -c -o tscvec.o tsc.c  2> reportgcc.lst
