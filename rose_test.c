@@ -538,32 +538,36 @@ int s256()
   }
   return 0;
 }
-//int s258()
-//{
-//
-////	scalar and array expansion
-////	wrap-around scalar under an if
-//
-//
-//	float s;
-//	for (int nl = 0; nl < ntimes/10; nl++) {
-//		s = 0.;
-//#pragma SIMD
-//		for (int i = 0; i < LEN; ++i) {
-//			if (a[i] > 0.) {
-//				s = d[i] * d[i];
-//			}
-//			b[i] = s * c[i] + d[i];
-//			e[i] = (s + (float)1.) * aa[0][i];
-//		}
-//	}
-//	return 0;
-//}
+
+int s258()
+{
+  int i_nom_27_strip_500;
+  int i_nom_27;
+//	scalar and array expansion
+//	wrap-around scalar under an if
+  float s;
+  __SIMD s_SIMD;
+  void *cmpReturn_501;
+  for (int nl = 0; nl < 200000 / 10; nl++) {
+    s = 0.0;
+    
+#pragma SIMD
+    s_SIMD = _SIMD_splats_ps(s);
+    for (i_nom_27 = 0, i_nom_27_strip_500 = i_nom_27; i_nom_27 <= 31999; (i_nom_27 += 4 , i_nom_27_strip_500 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      _SIMD_cmpgt_ps(a_SIMD[i_nom_27_strip_500],_SIMD_splats_pd(0.0),&cmpReturn_501);
+      s_SIMD = _SIMD_sel_ps(s_SIMD,_SIMD_mul_ps(d_SIMD[i_nom_27_strip_500],d_SIMD[i_nom_27_strip_500]),&cmpReturn_501);
+      b_SIMD[i_nom_27_strip_500] = _SIMD_madd_ps(s_SIMD,c_SIMD[i_nom_27_strip_500],d_SIMD[i_nom_27_strip_500]);
+      e_SIMD[i_nom_27_strip_500] = _SIMD_mul_ps(_SIMD_add_ps(s_SIMD,_SIMD_splats_ps(1.)),aa_SIMD[0][i_nom_27_strip_500]);
+    }
+  }
+  return 0;
+}
 
 int s261()
 {
-  int i_nom_27_strip_525;
-  int i_nom_27;
+  int i_nom_28_strip_525;
+  int i_nom_28;
 //	scalar and array expansion
 //	wrap-around scalar under an if
   float t;
@@ -575,9 +579,9 @@ int s261()
     }
     
 #pragma SIMD
-    for (i_nom_27 = 1, i_nom_27_strip_525 = i_nom_27; i_nom_27 <= 31999; (i_nom_27 += 4 , i_nom_27_strip_525 += 1)) {
-      t_SIMD = _SIMD_mul_ps(c_SIMD[i_nom_27_strip_525],d_SIMD[i_nom_27_strip_525]);
-      c_SIMD[i_nom_27_strip_525] = t_SIMD;
+    for (i_nom_28 = 1, i_nom_28_strip_525 = i_nom_28; i_nom_28 <= 31999; (i_nom_28 += 4 , i_nom_28_strip_525 += 1)) {
+      t_SIMD = _SIMD_mul_ps(c_SIMD[i_nom_28_strip_525],d_SIMD[i_nom_28_strip_525]);
+      c_SIMD[i_nom_28_strip_525] = t_SIMD;
     }
   }
   return 0;
@@ -585,62 +589,67 @@ int s261()
 
 int s271()
 {
-  int i_nom_28_strip_542;
-  int i_nom_28;
+  int i_nom_29_strip_542;
+  int i_nom_29;
   void *cmpReturn_543;
 //	control flow
 //	loop with singularity handling
   for (int nl = 0; nl < 4 * 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_28 = 0, i_nom_28_strip_542 = i_nom_28; i_nom_28 <= 31999; (i_nom_28 += 4 , i_nom_28_strip_542 += 1)) {
+    for (i_nom_29 = 0, i_nom_29_strip_542 = i_nom_29; i_nom_29 <= 31999; (i_nom_29 += 4 , i_nom_29_strip_542 += 1)) {
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmpgt_ps(b_SIMD[i_nom_28_strip_542],_SIMD_splats_ps(0.0),&cmpReturn_543);
-      a_SIMD[i_nom_28_strip_542] = _SIMD_sel_ps(a_SIMD[i_nom_28_strip_542],_SIMD_add_ps(a_SIMD[i_nom_28_strip_542],_SIMD_mul_ps(b_SIMD[i_nom_28_strip_542],c_SIMD[i_nom_28_strip_542])),&cmpReturn_543);
+      _SIMD_cmpgt_ps(b_SIMD[i_nom_29_strip_542],_SIMD_splats_ps(0.0),&cmpReturn_543);
+      a_SIMD[i_nom_29_strip_542] = _SIMD_sel_ps(a_SIMD[i_nom_29_strip_542],_SIMD_add_ps(a_SIMD[i_nom_29_strip_542],_SIMD_mul_ps(b_SIMD[i_nom_29_strip_542],c_SIMD[i_nom_29_strip_542])),&cmpReturn_543);
     }
   }
   return 0;
 }
-//int s272(float t)
-//{
-//
-////	control flow
-////	loop with independent conditional
-//
-//	for (int nl = 0; nl < ntimes; nl++) {
-//#pragma SIMD
-//		for (int i = 0; i < LEN; i++) {
-//			if (e[i] >= t) {
-//				a[i] += c[i] * d[i];
-//				b[i] += c[i] * c[i];
-//			}
-//		}
-//	}
-//	return 0;
-//}
+
+int s272(float t)
+{
+  int i_nom_30_strip_559;
+  int i_nom_30;
+  __SIMD t_SIMD;
+  void *cmpReturn_560;
+//	control flow
+//	loop with independent conditional
+  for (int nl = 0; nl < 200000; nl++) {
+    
+#pragma SIMD
+    t_SIMD = _SIMD_splats_ps(t);
+    for (i_nom_30 = 0, i_nom_30_strip_559 = i_nom_30; i_nom_30 <= 31999; (i_nom_30 += 4 , i_nom_30_strip_559 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      _SIMD_cmpge_ps(e_SIMD[i_nom_30_strip_559],t_SIMD,&cmpReturn_560);
+      a_SIMD[i_nom_30_strip_559] = _SIMD_sel_ps(a_SIMD[i_nom_30_strip_559],_SIMD_add_ps(a_SIMD[i_nom_30_strip_559],_SIMD_mul_ps(c_SIMD[i_nom_30_strip_559],d_SIMD[i_nom_30_strip_559])),&cmpReturn_560);
+      b_SIMD[i_nom_30_strip_559] = _SIMD_sel_ps(b_SIMD[i_nom_30_strip_559],_SIMD_add_ps(b_SIMD[i_nom_30_strip_559],_SIMD_mul_ps(c_SIMD[i_nom_30_strip_559],c_SIMD[i_nom_30_strip_559])),&cmpReturn_560);
+    }
+  }
+  return 0;
+}
 
 int s273()
 {
-  int i_nom_30_strip_584;
-  int i_nom_30;
-  int i_nom_29_strip_578;
-  int i_nom_29;
+  int i_nom_32_strip_584;
+  int i_nom_32;
+  int i_nom_31_strip_578;
+  int i_nom_31;
   void *cmpReturn_580;
 //	control flow
 //	simple loop with dependent conditional
   for (int nl = 0; nl < 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_29 = 0, i_nom_29_strip_578 = i_nom_29; i_nom_29 <= 31999; (i_nom_29 += 4 , i_nom_29_strip_578 += 1)) {
-      a_SIMD[i_nom_29_strip_578] = _SIMD_add_ps(a_SIMD[i_nom_29_strip_578],_SIMD_mul_ps(d_SIMD[i_nom_29_strip_578],e_SIMD[i_nom_29_strip_578]));
+    for (i_nom_31 = 0, i_nom_31_strip_578 = i_nom_31; i_nom_31 <= 31999; (i_nom_31 += 4 , i_nom_31_strip_578 += 1)) {
+      a_SIMD[i_nom_31_strip_578] = _SIMD_add_ps(a_SIMD[i_nom_31_strip_578],_SIMD_mul_ps(d_SIMD[i_nom_31_strip_578],e_SIMD[i_nom_31_strip_578]));
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmplt_ps(a_SIMD[i_nom_29_strip_578],_SIMD_splats_ps(0.0),&cmpReturn_580);
-      b_SIMD[i_nom_29_strip_578] = _SIMD_sel_ps(b_SIMD[i_nom_29_strip_578],_SIMD_add_ps(b_SIMD[i_nom_29_strip_578],_SIMD_mul_ps(d_SIMD[i_nom_29_strip_578],e_SIMD[i_nom_29_strip_578])),&cmpReturn_580);
+      _SIMD_cmplt_ps(a_SIMD[i_nom_31_strip_578],_SIMD_splats_ps(0.0),&cmpReturn_580);
+      b_SIMD[i_nom_31_strip_578] = _SIMD_sel_ps(b_SIMD[i_nom_31_strip_578],_SIMD_add_ps(b_SIMD[i_nom_31_strip_578],_SIMD_mul_ps(d_SIMD[i_nom_31_strip_578],e_SIMD[i_nom_31_strip_578])),&cmpReturn_580);
     }
     
 #pragma SIMD
-    for (i_nom_30 = 0, i_nom_30_strip_584 = i_nom_30; i_nom_30 <= 31999; (i_nom_30 += 4 , i_nom_30_strip_584 += 1)) {
-      c_SIMD[i_nom_30_strip_584] = _SIMD_add_ps(c_SIMD[i_nom_30_strip_584],_SIMD_mul_ps(a_SIMD[i_nom_30_strip_584],d_SIMD[i_nom_30_strip_584]));
+    for (i_nom_32 = 0, i_nom_32_strip_584 = i_nom_32; i_nom_32 <= 31999; (i_nom_32 += 4 , i_nom_32_strip_584 += 1)) {
+      c_SIMD[i_nom_32_strip_584] = _SIMD_add_ps(c_SIMD[i_nom_32_strip_584],_SIMD_mul_ps(a_SIMD[i_nom_32_strip_584],d_SIMD[i_nom_32_strip_584]));
     }
   }
   return 0;
@@ -648,20 +657,20 @@ int s273()
 
 int s274()
 {
-  int i_nom_31_strip_600;
-  int i_nom_31;
+  int i_nom_33_strip_600;
+  int i_nom_33;
   void *cmpReturn_602;
 //	control flow
 //	complex loop with dependent conditional
   for (int nl = 0; nl < 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_31 = 0, i_nom_31_strip_600 = i_nom_31; i_nom_31 <= 31999; (i_nom_31 += 4 , i_nom_31_strip_600 += 1)) {
-      a_SIMD[i_nom_31_strip_600] = _SIMD_madd_ps(e_SIMD[i_nom_31_strip_600],d_SIMD[i_nom_31_strip_600],c_SIMD[i_nom_31_strip_600]);
+    for (i_nom_33 = 0, i_nom_33_strip_600 = i_nom_33; i_nom_33 <= 31999; (i_nom_33 += 4 , i_nom_33_strip_600 += 1)) {
+      a_SIMD[i_nom_33_strip_600] = _SIMD_madd_ps(e_SIMD[i_nom_33_strip_600],d_SIMD[i_nom_33_strip_600],c_SIMD[i_nom_33_strip_600]);
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmpgt_ps(a_SIMD[i_nom_31_strip_600],_SIMD_splats_ps(0.0),&cmpReturn_602);
-      a_SIMD[i_nom_31_strip_600] = _SIMD_sel_ps(_SIMD_mul_ps(d_SIMD[i_nom_31_strip_600],e_SIMD[i_nom_31_strip_600]),a_SIMD[i_nom_31_strip_600],&cmpReturn_602);
-      b_SIMD[i_nom_31_strip_600] = _SIMD_sel_ps(b_SIMD[i_nom_31_strip_600],_SIMD_add_ps(a_SIMD[i_nom_31_strip_600],b_SIMD[i_nom_31_strip_600]),&cmpReturn_602);
+      _SIMD_cmpgt_ps(a_SIMD[i_nom_33_strip_600],_SIMD_splats_ps(0.0),&cmpReturn_602);
+      a_SIMD[i_nom_33_strip_600] = _SIMD_sel_ps(_SIMD_mul_ps(d_SIMD[i_nom_33_strip_600],e_SIMD[i_nom_33_strip_600]),a_SIMD[i_nom_33_strip_600],&cmpReturn_602);
+      b_SIMD[i_nom_33_strip_600] = _SIMD_sel_ps(b_SIMD[i_nom_33_strip_600],_SIMD_add_ps(a_SIMD[i_nom_33_strip_600],b_SIMD[i_nom_33_strip_600]),&cmpReturn_602);
     }
   }
   return 0;
@@ -669,8 +678,8 @@ int s274()
 
 int s275()
 {
-  int i_nom_32_strip_622;
-  int i_nom_32;
+  int i_nom_34_strip_622;
+  int i_nom_34;
   void *cmpReturn_623;
 //	control flow
 //	if around inner loop, interchanging needed
@@ -678,10 +687,10 @@ int s275()
     for (int j = 1; j < 256; j++) {
       
 #pragma SIMD
-      for (i_nom_32 = 0, i_nom_32_strip_622 = i_nom_32; i_nom_32 <= 255; (i_nom_32 += 4 , i_nom_32_strip_622 += 1)) {
+      for (i_nom_34 = 0, i_nom_34_strip_622 = i_nom_34; i_nom_34 <= 255; (i_nom_34 += 4 , i_nom_34_strip_622 += 1)) {
 /* if statement is converted into vectorizaed conditional statement */
-        _SIMD_cmpgt_ps(aa_SIMD[0][i_nom_32_strip_622],_SIMD_splats_ps(0.0),&cmpReturn_623);
-        aa_SIMD[j][i_nom_32_strip_622] = _SIMD_sel_ps(aa_SIMD[j][i_nom_32_strip_622],_SIMD_madd_ps(bb_SIMD[j][i_nom_32_strip_622],cc_SIMD[j][i_nom_32_strip_622],aa_SIMD[j - 1][i_nom_32_strip_622]),&cmpReturn_623);
+        _SIMD_cmpgt_ps(aa_SIMD[0][i_nom_34_strip_622],_SIMD_splats_ps(0.0),&cmpReturn_623);
+        aa_SIMD[j][i_nom_34_strip_622] = _SIMD_sel_ps(aa_SIMD[j][i_nom_34_strip_622],_SIMD_madd_ps(bb_SIMD[j][i_nom_34_strip_622],cc_SIMD[j][i_nom_34_strip_622],aa_SIMD[j - 1][i_nom_34_strip_622]),&cmpReturn_623);
       }
     }
   }
@@ -690,16 +699,16 @@ int s275()
 
 int s2275()
 {
-  int i_nom_33_strip_640;
-  int i_nom_33;
+  int i_nom_35_strip_640;
+  int i_nom_35;
 //	loop distribution is needed to be able to interchange
   for (int nl = 0; nl < 100 * (200000 / 256); nl++) {
     for (int j = 0; j < 256; j++) {
       
 #pragma SIMD
-      for (i_nom_33 = 0, i_nom_33_strip_640 = i_nom_33; i_nom_33 <= 255; (i_nom_33 += 4 , i_nom_33_strip_640 += 1)) {
-        aa_SIMD[j][i_nom_33_strip_640] = _SIMD_madd_ps(bb_SIMD[j][i_nom_33_strip_640],cc_SIMD[j][i_nom_33_strip_640],aa_SIMD[j][i_nom_33_strip_640]);
-        a_SIMD[i_nom_33_strip_640] = _SIMD_madd_ps(c_SIMD[i_nom_33_strip_640],d_SIMD[i_nom_33_strip_640],b_SIMD[i_nom_33_strip_640]);
+      for (i_nom_35 = 0, i_nom_35_strip_640 = i_nom_35; i_nom_35 <= 255; (i_nom_35 += 4 , i_nom_35_strip_640 += 1)) {
+        aa_SIMD[j][i_nom_35_strip_640] = _SIMD_madd_ps(bb_SIMD[j][i_nom_35_strip_640],cc_SIMD[j][i_nom_35_strip_640],aa_SIMD[j][i_nom_35_strip_640]);
+        a_SIMD[i_nom_35_strip_640] = _SIMD_madd_ps(c_SIMD[i_nom_35_strip_640],d_SIMD[i_nom_35_strip_640],b_SIMD[i_nom_35_strip_640]);
       }
     }
   }
@@ -727,18 +736,18 @@ int s2275()
 
 int s2711()
 {
-  int i_nom_34_strip_677;
-  int i_nom_34;
+  int i_nom_36_strip_677;
+  int i_nom_36;
   void *cmpReturn_678;
 //	control flow
 //	semantic if removal
   for (int nl = 0; nl < 4 * 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_34 = 0, i_nom_34_strip_677 = i_nom_34; i_nom_34 <= 31999; (i_nom_34 += 4 , i_nom_34_strip_677 += 1)) {
+    for (i_nom_36 = 0, i_nom_36_strip_677 = i_nom_36; i_nom_36 <= 31999; (i_nom_36 += 4 , i_nom_36_strip_677 += 1)) {
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmpne_ps(b_SIMD[i_nom_34_strip_677],_SIMD_splats_ps(0.0),&cmpReturn_678);
-      a_SIMD[i_nom_34_strip_677] = _SIMD_sel_ps(a_SIMD[i_nom_34_strip_677],_SIMD_add_ps(a_SIMD[i_nom_34_strip_677],_SIMD_mul_ps(b_SIMD[i_nom_34_strip_677],c_SIMD[i_nom_34_strip_677])),&cmpReturn_678);
+      _SIMD_cmpne_ps(b_SIMD[i_nom_36_strip_677],_SIMD_splats_ps(0.0),&cmpReturn_678);
+      a_SIMD[i_nom_36_strip_677] = _SIMD_sel_ps(a_SIMD[i_nom_36_strip_677],_SIMD_add_ps(a_SIMD[i_nom_36_strip_677],_SIMD_mul_ps(b_SIMD[i_nom_36_strip_677],c_SIMD[i_nom_36_strip_677])),&cmpReturn_678);
     }
   }
   return 0;
@@ -746,18 +755,18 @@ int s2711()
 
 int s2712()
 {
-  int i_nom_35_strip_694;
-  int i_nom_35;
+  int i_nom_37_strip_694;
+  int i_nom_37;
   void *cmpReturn_695;
 //	control flow
 //	if to elemental min
   for (int nl = 0; nl < 4 * 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_35 = 0, i_nom_35_strip_694 = i_nom_35; i_nom_35 <= 31999; (i_nom_35 += 4 , i_nom_35_strip_694 += 1)) {
+    for (i_nom_37 = 0, i_nom_37_strip_694 = i_nom_37; i_nom_37 <= 31999; (i_nom_37 += 4 , i_nom_37_strip_694 += 1)) {
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmpgt_ps(a_SIMD[i_nom_35_strip_694],b_SIMD[i_nom_35_strip_694],&cmpReturn_695);
-      a_SIMD[i_nom_35_strip_694] = _SIMD_sel_ps(a_SIMD[i_nom_35_strip_694],_SIMD_add_ps(a_SIMD[i_nom_35_strip_694],_SIMD_mul_ps(b_SIMD[i_nom_35_strip_694],c_SIMD[i_nom_35_strip_694])),&cmpReturn_695);
+      _SIMD_cmpgt_ps(a_SIMD[i_nom_37_strip_694],b_SIMD[i_nom_37_strip_694],&cmpReturn_695);
+      a_SIMD[i_nom_37_strip_694] = _SIMD_sel_ps(a_SIMD[i_nom_37_strip_694],_SIMD_add_ps(a_SIMD[i_nom_37_strip_694],_SIMD_mul_ps(b_SIMD[i_nom_37_strip_694],c_SIMD[i_nom_37_strip_694])),&cmpReturn_695);
     }
   }
   return 0;
@@ -765,8 +774,8 @@ int s2712()
 
 int s1281()
 {
-  int i_nom_36_strip_713;
-  int i_nom_36;
+  int i_nom_38_strip_713;
+  int i_nom_38;
 //	crossing thresholds
 //	index set splitting
 //	reverse data access
@@ -775,10 +784,10 @@ int s1281()
   for (int nl = 0; nl < 4 * 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_36 = 0, i_nom_36_strip_713 = i_nom_36; i_nom_36 <= 31999; (i_nom_36 += 4 , i_nom_36_strip_713 += 1)) {
-      x_SIMD = _SIMD_add_ps(_SIMD_madd_ps(a_SIMD[i_nom_36_strip_713],d_SIMD[i_nom_36_strip_713],_SIMD_mul_ps(b_SIMD[i_nom_36_strip_713],c_SIMD[i_nom_36_strip_713])),e_SIMD[i_nom_36_strip_713]);
-      a_SIMD[i_nom_36_strip_713] = _SIMD_sub_ps(x_SIMD,_SIMD_splats_ps(1.));
-      b_SIMD[i_nom_36_strip_713] = x_SIMD;
+    for (i_nom_38 = 0, i_nom_38_strip_713 = i_nom_38; i_nom_38 <= 31999; (i_nom_38 += 4 , i_nom_38_strip_713 += 1)) {
+      x_SIMD = _SIMD_add_ps(_SIMD_madd_ps(a_SIMD[i_nom_38_strip_713],d_SIMD[i_nom_38_strip_713],_SIMD_mul_ps(b_SIMD[i_nom_38_strip_713],c_SIMD[i_nom_38_strip_713])),e_SIMD[i_nom_38_strip_713]);
+      a_SIMD[i_nom_38_strip_713] = _SIMD_sub_ps(x_SIMD,_SIMD_splats_ps(1.));
+      b_SIMD[i_nom_38_strip_713] = x_SIMD;
     }
   }
   return 0;
@@ -800,16 +809,16 @@ int s1281()
 
 int s2101()
 {
-  int i_nom_37_strip_746;
-  int i_nom_37;
+  int i_nom_39_strip_746;
+  int i_nom_39;
 //	diagonals
 //	main diagonal calculation
 //	jump in data access
   for (int nl = 0; nl < 10 * 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_37 = 0, i_nom_37_strip_746 = i_nom_37; i_nom_37 <= 255; (i_nom_37 += 4 , i_nom_37_strip_746 += 1)) {
-      aa_SIMD[i_nom_37_strip_746][i_nom_37_strip_746] = _SIMD_add_ps(aa_SIMD[i_nom_37_strip_746][i_nom_37_strip_746],_SIMD_mul_ps(bb_SIMD[i_nom_37_strip_746][i_nom_37_strip_746],cc_SIMD[i_nom_37_strip_746][i_nom_37_strip_746]));
+    for (i_nom_39 = 0, i_nom_39_strip_746 = i_nom_39; i_nom_39 <= 255; (i_nom_39 += 4 , i_nom_39_strip_746 += 1)) {
+      aa_SIMD[i_nom_39_strip_746][i_nom_39_strip_746] = _SIMD_add_ps(aa_SIMD[i_nom_39_strip_746][i_nom_39_strip_746],_SIMD_mul_ps(bb_SIMD[i_nom_39_strip_746][i_nom_39_strip_746],cc_SIMD[i_nom_39_strip_746][i_nom_39_strip_746]));
     }
   }
   return 0;
@@ -817,24 +826,24 @@ int s2101()
 
 int s2102()
 {
-  int i_nom_39_strip_768;
-  int i_nom_39;
-  int i_nom_38_strip_763;
-  int i_nom_38;
+  int i_nom_41_strip_768;
+  int i_nom_41;
+  int i_nom_40_strip_763;
+  int i_nom_40;
 //	diagonals
 //	identity matrix, best results vectorize both inner and outer loops
   for (int nl = 0; nl < 100 * (200000 / 256); nl++) {
     for (int j = 0; j < 256; j++) {
       
 #pragma SIMD
-      for (i_nom_38 = 0, i_nom_38_strip_763 = i_nom_38; i_nom_38 <= 255; (i_nom_38 += 4 , i_nom_38_strip_763 += 1)) {
-        aa_SIMD[j][i_nom_38_strip_763] = _SIMD_splats_ps(0.0);
+      for (i_nom_40 = 0, i_nom_40_strip_763 = i_nom_40; i_nom_40 <= 255; (i_nom_40 += 4 , i_nom_40_strip_763 += 1)) {
+        aa_SIMD[j][i_nom_40_strip_763] = _SIMD_splats_ps(0.0);
       }
     }
     
 #pragma SIMD
-    for (i_nom_39 = 0, i_nom_39_strip_768 = i_nom_39; i_nom_39 <= 255; (i_nom_39 += 4 , i_nom_39_strip_768 += 1)) {
-      aa_SIMD[i_nom_39_strip_768][i_nom_39_strip_768] = _SIMD_splats_ps(1.);
+    for (i_nom_41 = 0, i_nom_41_strip_768 = i_nom_41; i_nom_41 <= 255; (i_nom_41 += 4 , i_nom_41_strip_768 += 1)) {
+      aa_SIMD[i_nom_41_strip_768][i_nom_41_strip_768] = _SIMD_splats_ps(1.);
     }
   }
   return 0;
@@ -842,8 +851,8 @@ int s2102()
 
 int s351()
 {
-  int i_nom_40_strip_784;
-  int i_nom_40;
+  int i_nom_42_strip_784;
+  int i_nom_42;
 //	loop rerolling
 //	unrolled saxpy
   float alpha = c[0];
@@ -852,8 +861,8 @@ int s351()
     
 #pragma SIMD
     alpha_SIMD = _SIMD_splats_ps(alpha);
-    for (i_nom_40 = 0, i_nom_40_strip_784 = i_nom_40; i_nom_40 <= 31999; (i_nom_40 += 4 , i_nom_40_strip_784 += 1)) {
-      a_SIMD[i_nom_40_strip_784] = _SIMD_add_ps(a_SIMD[i_nom_40_strip_784],_SIMD_mul_ps(alpha_SIMD,b_SIMD[i_nom_40_strip_784]));
+    for (i_nom_42 = 0, i_nom_42_strip_784 = i_nom_42; i_nom_42 <= 31999; (i_nom_42 += 4 , i_nom_42_strip_784 += 1)) {
+      a_SIMD[i_nom_42_strip_784] = _SIMD_add_ps(a_SIMD[i_nom_42_strip_784],_SIMD_mul_ps(alpha_SIMD,b_SIMD[i_nom_42_strip_784]));
     }
   }
   return 0;
@@ -861,7 +870,7 @@ int s351()
 
 int s352()
 {
-  int i_nom_41;
+  int i_nom_43;
 //	loop rerolling
 //	unrolled dot product
   float dot;
@@ -871,8 +880,8 @@ int s352()
     
 #pragma SIMD
     dot_SIMD = _SIMD_splats_ps(dot);
-    for (i_nom_41 = 0; i_nom_41 <= 31999; i_nom_41 += 5) {
-      dot_SIMD = _SIMD_madd_ps(a_SIMD[i_nom_41 + 4],b_SIMD[i_nom_41 + 4],_SIMD_madd_ps(a_SIMD[i_nom_41 + 3],b_SIMD[i_nom_41 + 3],_SIMD_madd_ps(a_SIMD[i_nom_41 + 2],b_SIMD[i_nom_41 + 2],_SIMD_madd_ps(a_SIMD[i_nom_41 + 1],b_SIMD[i_nom_41 + 1],_SIMD_madd_ps(a_SIMD[i_nom_41],b_SIMD[i_nom_41],dot_SIMD)))));
+    for (i_nom_43 = 0; i_nom_43 <= 31999; i_nom_43 += 5) {
+      dot_SIMD = _SIMD_madd_ps(a_SIMD[i_nom_43 + 4],b_SIMD[i_nom_43 + 4],_SIMD_madd_ps(a_SIMD[i_nom_43 + 3],b_SIMD[i_nom_43 + 3],_SIMD_madd_ps(a_SIMD[i_nom_43 + 2],b_SIMD[i_nom_43 + 2],_SIMD_madd_ps(a_SIMD[i_nom_43 + 1],b_SIMD[i_nom_43 + 1],_SIMD_madd_ps(a_SIMD[i_nom_43],b_SIMD[i_nom_43],dot_SIMD)))));
     }
   }
   return 0;
@@ -898,10 +907,10 @@ int s352()
 
 int s441()
 {
-  int i_nom_43_strip_844;
-  int i_nom_43;
-  int i_nom_42_strip_836;
-  int i_nom_42;
+  int i_nom_45_strip_844;
+  int i_nom_45;
+  int i_nom_44_strip_836;
+  int i_nom_44;
   void *cmpReturn_837;
   void *cmpReturn_845;
 //	non-logical if's
@@ -909,17 +918,17 @@ int s441()
   for (int nl = 0; nl < 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_42 = 0, i_nom_42_strip_836 = i_nom_42; i_nom_42 <= 31999; (i_nom_42 += 4 , i_nom_42_strip_836 += 1)) {
+    for (i_nom_44 = 0, i_nom_44_strip_836 = i_nom_44; i_nom_44 <= 31999; (i_nom_44 += 4 , i_nom_44_strip_836 += 1)) {
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmplt_ps(d_SIMD[i_nom_42_strip_836],_SIMD_splats_ps(0.0),&cmpReturn_837);
-      a_SIMD[i_nom_42_strip_836] = _SIMD_sel_ps(_SIMD_add_ps(a_SIMD[i_nom_42_strip_836],_SIMD_mul_ps(c_SIMD[i_nom_42_strip_836],c_SIMD[i_nom_42_strip_836])),_SIMD_add_ps(a_SIMD[i_nom_42_strip_836],_SIMD_mul_ps(b_SIMD[i_nom_42_strip_836],c_SIMD[i_nom_42_strip_836])),&cmpReturn_837);
+      _SIMD_cmplt_ps(d_SIMD[i_nom_44_strip_836],_SIMD_splats_ps(0.0),&cmpReturn_837);
+      a_SIMD[i_nom_44_strip_836] = _SIMD_sel_ps(_SIMD_add_ps(a_SIMD[i_nom_44_strip_836],_SIMD_mul_ps(c_SIMD[i_nom_44_strip_836],c_SIMD[i_nom_44_strip_836])),_SIMD_add_ps(a_SIMD[i_nom_44_strip_836],_SIMD_mul_ps(b_SIMD[i_nom_44_strip_836],c_SIMD[i_nom_44_strip_836])),&cmpReturn_837);
     }
     
 #pragma SIMD
-    for (i_nom_43 = 0, i_nom_43_strip_844 = i_nom_43; i_nom_43 <= 31999; (i_nom_43 += 4 , i_nom_43_strip_844 += 1)) {
+    for (i_nom_45 = 0, i_nom_45_strip_844 = i_nom_45; i_nom_45 <= 31999; (i_nom_45 += 4 , i_nom_45_strip_844 += 1)) {
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmpeq_ps(d_SIMD[i_nom_43_strip_844],_SIMD_splats_ps(0.0),&cmpReturn_845);
-      a_SIMD[i_nom_43_strip_844] = _SIMD_sel_ps(_SIMD_add_ps(a_SIMD[i_nom_43_strip_844],_SIMD_mul_ps(c_SIMD[i_nom_43_strip_844],c_SIMD[i_nom_43_strip_844])),_SIMD_add_ps(a_SIMD[i_nom_43_strip_844],_SIMD_mul_ps(b_SIMD[i_nom_43_strip_844],b_SIMD[i_nom_43_strip_844])),&cmpReturn_845);
+      _SIMD_cmpeq_ps(d_SIMD[i_nom_45_strip_844],_SIMD_splats_ps(0.0),&cmpReturn_845);
+      a_SIMD[i_nom_45_strip_844] = _SIMD_sel_ps(_SIMD_add_ps(a_SIMD[i_nom_45_strip_844],_SIMD_mul_ps(c_SIMD[i_nom_45_strip_844],c_SIMD[i_nom_45_strip_844])),_SIMD_add_ps(a_SIMD[i_nom_45_strip_844],_SIMD_mul_ps(b_SIMD[i_nom_45_strip_844],b_SIMD[i_nom_45_strip_844])),&cmpReturn_845);
     }
   }
   return 0;
@@ -927,15 +936,15 @@ int s441()
 
 int s451()
 {
-  int i_nom_44_strip_863;
-  int i_nom_44;
+  int i_nom_46_strip_863;
+  int i_nom_46;
 //	intrinsic functions
 //	intrinsics
   for (int nl = 0; nl < 200000 / 5; nl++) {
     
 #pragma SIMD
-    for (i_nom_44 = 0, i_nom_44_strip_863 = i_nom_44; i_nom_44 <= 31999; (i_nom_44 += 4 , i_nom_44_strip_863 += 1)) {
-      a_SIMD[i_nom_44_strip_863] = _SIMD_add_epi32(_SIMD_sin_epi32(b_SIMD[i_nom_44_strip_863]),_SIMD_cos_epi32(c_SIMD[i_nom_44_strip_863]));
+    for (i_nom_46 = 0, i_nom_46_strip_863 = i_nom_46; i_nom_46 <= 31999; (i_nom_46 += 4 , i_nom_46_strip_863 += 1)) {
+      a_SIMD[i_nom_46_strip_863] = _SIMD_add_epi32(_SIMD_sin_epi32(b_SIMD[i_nom_46_strip_863]),_SIMD_cos_epi32(c_SIMD[i_nom_46_strip_863]));
     }
   }
   return 0;
@@ -958,8 +967,8 @@ int s451()
 
 int s453()
 {
-  int i_nom_45_strip_895;
-  int i_nom_45;
+  int i_nom_47_strip_895;
+  int i_nom_47;
 //	induction varibale recognition
   float s;
   __SIMD s_SIMD;
@@ -968,9 +977,9 @@ int s453()
     
 #pragma SIMD
     s_SIMD = _SIMD_splats_ps(s);
-    for (i_nom_45 = 0, i_nom_45_strip_895 = i_nom_45; i_nom_45 <= 31999; (i_nom_45 += 4 , i_nom_45_strip_895 += 1)) {
+    for (i_nom_47 = 0, i_nom_47_strip_895 = i_nom_47; i_nom_47 <= 31999; (i_nom_47 += 4 , i_nom_47_strip_895 += 1)) {
       s_SIMD = _SIMD_add_ps(s_SIMD,_SIMD_splats_ps(2.));
-      a_SIMD[i_nom_45_strip_895] = _SIMD_mul_ps(s_SIMD,b_SIMD[i_nom_45_strip_895]);
+      a_SIMD[i_nom_47_strip_895] = _SIMD_mul_ps(s_SIMD,b_SIMD[i_nom_47_strip_895]);
     }
   }
   return 0;
@@ -1028,15 +1037,15 @@ int s453()
 
 int va()
 {
-  int i_nom_46_strip_961;
-  int i_nom_46;
+  int i_nom_48_strip_961;
+  int i_nom_48;
 //	control loops
 //	vector assignment
   for (int nl = 0; nl < 200000 * 10; nl++) {
     
 #pragma SIMD
-    for (i_nom_46 = 0, i_nom_46_strip_961 = i_nom_46; i_nom_46 <= 31999; (i_nom_46 += 4 , i_nom_46_strip_961 += 1)) {
-      a_SIMD[i_nom_46_strip_961] = b_SIMD[i_nom_46_strip_961];
+    for (i_nom_48 = 0, i_nom_48_strip_961 = i_nom_48; i_nom_48 <= 31999; (i_nom_48 += 4 , i_nom_48_strip_961 += 1)) {
+      a_SIMD[i_nom_48_strip_961] = b_SIMD[i_nom_48_strip_961];
     }
   }
   return 0;
@@ -1098,18 +1107,18 @@ int va()
 
 int vif()
 {
-  int i_nom_47_strip_1030;
-  int i_nom_47;
+  int i_nom_49_strip_1030;
+  int i_nom_49;
   void *cmpReturn_1031;
 //	control loops
 //	vector if
   for (int nl = 0; nl < 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_47 = 0, i_nom_47_strip_1030 = i_nom_47; i_nom_47 <= 31999; (i_nom_47 += 4 , i_nom_47_strip_1030 += 1)) {
+    for (i_nom_49 = 0, i_nom_49_strip_1030 = i_nom_49; i_nom_49 <= 31999; (i_nom_49 += 4 , i_nom_49_strip_1030 += 1)) {
 /* if statement is converted into vectorizaed conditional statement */
-      _SIMD_cmpgt_ps(b_SIMD[i_nom_47_strip_1030],_SIMD_splats_ps(0.0),&cmpReturn_1031);
-      a_SIMD[i_nom_47_strip_1030] = _SIMD_sel_ps(a_SIMD[i_nom_47_strip_1030],b_SIMD[i_nom_47_strip_1030],&cmpReturn_1031);
+      _SIMD_cmpgt_ps(b_SIMD[i_nom_49_strip_1030],_SIMD_splats_ps(0.0),&cmpReturn_1031);
+      a_SIMD[i_nom_49_strip_1030] = _SIMD_sel_ps(a_SIMD[i_nom_49_strip_1030],b_SIMD[i_nom_49_strip_1030],&cmpReturn_1031);
     }
   }
   return 0;
@@ -1117,15 +1126,15 @@ int vif()
 
 int vpv()
 {
-  int i_nom_48_strip_1048;
-  int i_nom_48;
+  int i_nom_50_strip_1048;
+  int i_nom_50;
 //	control loops
 //	vector plus vector
   for (int nl = 0; nl < 200000 * 10; nl++) {
     
 #pragma SIMD
-    for (i_nom_48 = 0, i_nom_48_strip_1048 = i_nom_48; i_nom_48 <= 31999; (i_nom_48 += 4 , i_nom_48_strip_1048 += 1)) {
-      a_SIMD[i_nom_48_strip_1048] = _SIMD_add_ps(a_SIMD[i_nom_48_strip_1048],b_SIMD[i_nom_48_strip_1048]);
+    for (i_nom_50 = 0, i_nom_50_strip_1048 = i_nom_50; i_nom_50 <= 31999; (i_nom_50 += 4 , i_nom_50_strip_1048 += 1)) {
+      a_SIMD[i_nom_50_strip_1048] = _SIMD_add_ps(a_SIMD[i_nom_50_strip_1048],b_SIMD[i_nom_50_strip_1048]);
     }
   }
   return 0;
@@ -1133,16 +1142,16 @@ int vpv()
 
 int vtv()
 {
-  int i_nom_49_strip_1064;
-  int i_nom_49;
+  int i_nom_51_strip_1064;
+  int i_nom_51;
 //	control loops
 //	vector times vector
 // Function Body
   for (int nl = 0; nl < 200000 * 10; nl++) {
     
 #pragma SIMD
-    for (i_nom_49 = 0, i_nom_49_strip_1064 = i_nom_49; i_nom_49 <= 31999; (i_nom_49 += 4 , i_nom_49_strip_1064 += 1)) {
-      a_SIMD[i_nom_49_strip_1064] = _SIMD_mul_ps(a_SIMD[i_nom_49_strip_1064],b_SIMD[i_nom_49_strip_1064]);
+    for (i_nom_51 = 0, i_nom_51_strip_1064 = i_nom_51; i_nom_51 <= 31999; (i_nom_51 += 4 , i_nom_51_strip_1064 += 1)) {
+      a_SIMD[i_nom_51_strip_1064] = _SIMD_mul_ps(a_SIMD[i_nom_51_strip_1064],b_SIMD[i_nom_51_strip_1064]);
     }
   }
   return 0;
@@ -1151,15 +1160,15 @@ int vtv()
 
 int vpvtv()
 {
-  int i_nom_50_strip_1082;
-  int i_nom_50;
+  int i_nom_52_strip_1082;
+  int i_nom_52;
 //	control loops
 //	vector plus vector times vector
   for (int nl = 0; nl < 4 * 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_50 = 0, i_nom_50_strip_1082 = i_nom_50; i_nom_50 <= 31999; (i_nom_50 += 4 , i_nom_50_strip_1082 += 1)) {
-      a_SIMD[i_nom_50_strip_1082] = _SIMD_add_ps(a_SIMD[i_nom_50_strip_1082],_SIMD_mul_ps(b_SIMD[i_nom_50_strip_1082],c_SIMD[i_nom_50_strip_1082]));
+    for (i_nom_52 = 0, i_nom_52_strip_1082 = i_nom_52; i_nom_52 <= 31999; (i_nom_52 += 4 , i_nom_52_strip_1082 += 1)) {
+      a_SIMD[i_nom_52_strip_1082] = _SIMD_add_ps(a_SIMD[i_nom_52_strip_1082],_SIMD_mul_ps(b_SIMD[i_nom_52_strip_1082],c_SIMD[i_nom_52_strip_1082]));
     }
   }
   return 0;
@@ -1182,15 +1191,15 @@ int vpvtv()
 
 int vpvpv()
 {
-  int i_nom_51_strip_1115;
-  int i_nom_51;
+  int i_nom_53_strip_1115;
+  int i_nom_53;
 //	control loops
 //	vector plus vector plus vector
   for (int nl = 0; nl < 4 * 200000; nl++) {
     
 #pragma SIMD
-    for (i_nom_51 = 0, i_nom_51_strip_1115 = i_nom_51; i_nom_51 <= 31999; (i_nom_51 += 4 , i_nom_51_strip_1115 += 1)) {
-      a_SIMD[i_nom_51_strip_1115] = _SIMD_add_ps(a_SIMD[i_nom_51_strip_1115],_SIMD_add_ps(b_SIMD[i_nom_51_strip_1115],c_SIMD[i_nom_51_strip_1115]));
+    for (i_nom_53 = 0, i_nom_53_strip_1115 = i_nom_53; i_nom_53 <= 31999; (i_nom_53 += 4 , i_nom_53_strip_1115 += 1)) {
+      a_SIMD[i_nom_53_strip_1115] = _SIMD_add_ps(a_SIMD[i_nom_53_strip_1115],_SIMD_add_ps(b_SIMD[i_nom_53_strip_1115],c_SIMD[i_nom_53_strip_1115]));
     }
   }
   return 0;
