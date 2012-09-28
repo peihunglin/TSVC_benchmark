@@ -1,4 +1,4 @@
-
+#include "rose_simd.h" 
 /*
  * This is an executable test containing a number of loops to measure
  * the performance of a compiler. Arrays' length is LEN by default
@@ -69,10 +69,19 @@ __attribute__((aligned(16))) float a[LEN],b[LEN],c[LEN],d[LEN],e[LEN],
 
 int indx[LEN] __attribute__((aligned(16)));
 
+__SIMD *X_SIMD;
+__SIMD *Y_SIMD;
+__SIMD *a_SIMD;
+__SIMD *b_SIMD;
+__SIMD *c_SIMD;
+__SIMD *d_SIMD;
+__SIMD *e_SIMD;
+__SIMD (*aa_SIMD)[256UL / 4];
+__SIMD (*bb_SIMD)[256UL / 4];
+__SIMD (*cc_SIMD)[256UL / 4];
 
 float* __restrict__ xx;
 float* yy;
-
 int dummy(float[LEN], float[LEN], float[LEN], float[LEN], float[LEN], float[LEN2][LEN2], float[LEN2][LEN2], float[LEN2][LEN2], float);
 
 int dummy_media(short[], char[], int);
@@ -778,17 +787,23 @@ int s000()
 //	no dependence - vectorizable
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
+  int i_nom_1_strip_38;
+  int i_nom_1;
+  X_SIMD = ((__SIMD *)X);
+  Y_SIMD = ((__SIMD *)Y);
+  __SIMD one_SIMD = _SIMD_splats_ps(1.f);
 
 
 	init( "s000 ");
 	start_t = clock();
 
-	for (int nl = 0; nl < 2*ntimes; nl++) {
-		for (int i = 0; i < lll; i++) {
+  for (int nl = 0; nl < 2 * 200000; nl++) {
+    
+    for (i_nom_1 = 0, i_nom_1_strip_38 = i_nom_1; i_nom_1 <= 31999; (i_nom_1 += 4 , i_nom_1_strip_38 += 1)) {
 //			a[i] = b[i] + c[i];
 //			X[i] = (Y[i] * Z[i])+(U[i]*V[i]);
-			X[i] = Y[i] + 1;
-		}
+      X_SIMD[i_nom_1_strip_38] = _mm_add_ps(Y_SIMD[i_nom_1_strip_38],one_SIMD);
+    }
 		dummy((float*)X, (float*)Y, (float*)Z, (float*)U, (float*)V, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -885,15 +900,19 @@ int s1112()
 //	loop reversal
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
+  int i_nom_2;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  __SIMD one_SIMD = _SIMD_splats_ps(1.f);
 	
 
 	init("s112 ");
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes*3; nl++) {
-		for (int i = LEN - 1; i >= 0; i--) {
-			a[i] = b[i] + (float) 1.;
-		}
+    for (i_nom_2 = 0 ; i_nom_2 < LEN/4; i_nom_2 += 1) {
+      a_SIMD[i_nom_2] = _mm_add_ps(b_SIMD[i_nom_2],one_SIMD);
+    }
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -913,15 +932,19 @@ int s113()
 //	a(i)=a(1) but no actual dependence cycle
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
+  int i_nom_3_strip_71;
+  int i_nom_3;
+  __SIMD ascalar_SIMD;
 
 
 	init( "s113 ");
 	start_t = clock();
 
 	for (int nl = 0; nl < 4*ntimes; nl++) {
-		for (int i = 1; i < LEN; i++) {
-			a[i] = a[0] + b[i];
-		}
+    ascalar_SIMD = _SIMD_splats_ps(a[0]);
+    for (i_nom_3 = 0, i_nom_3_strip_71 = i_nom_3; i_nom_3 <= 31999; (i_nom_3 += 4 , i_nom_3_strip_71 += 1)) {
+      a_SIMD[i_nom_3_strip_71] = _mm_add_ps(ascalar_SIMD,b_SIMD[i_nom_3_strip_71]);
+    }
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -1876,16 +1899,21 @@ int s212()
 //	statement reordering
 //	dependency needing temporary
 
+  int i_nom_4_strip_86;
+  int i_nom_4;
+  c_SIMD = ((__SIMD *)c);
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
 	init( "s212 ");
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN-1; i++) {
-			a[i] *= c[i];
-			b[i] += a[i + 1] * d[i];
-		}
+    for (i_nom_4 = 0, i_nom_4_strip_86 = i_nom_4; i_nom_4 <= 31998; (i_nom_4 += 4 , i_nom_4_strip_86 += 1)) {
+      a_SIMD[i_nom_4_strip_86] = _mm_mul_ps(a_SIMD[i_nom_4_strip_86],c_SIMD[i_nom_4_strip_86]);
+    }
+    for (int i = 0; i < 32000 - 1; i++) {
+      b[i] += (a[i + 1] * d[i]);
+    }
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -1929,16 +1957,21 @@ int s221()
 //	loop that is partially recursive
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
+  int i_nom_5_strip_104;
+  int i_nom_5;
+  d_SIMD = ((__SIMD *)d);
 
 
 	init( "s221 ");
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes/2; nl++) {
-		for (int i = 1; i < LEN; i++) {
-			a[i] += c[i] * d[i];
-			b[i] = b[i - 1] + a[i] + d[i];
-		}
+    for (i_nom_5 = 1, i_nom_5_strip_104 = i_nom_5; i_nom_5 <= 31999; (i_nom_5 += 4 , i_nom_5_strip_104 += 1)) {
+      a_SIMD[i_nom_5_strip_104] = _mm_add_ps(a_SIMD[i_nom_5_strip_104],_mm_mul_ps(c_SIMD[i_nom_5_strip_104],d_SIMD[i_nom_5_strip_104]));
+    }
+    for (int i = 1; i < 32000; i++) {
+      b[i] = ((b[i - 1] + a[i]) + d[i]);
+    }
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -1980,6 +2013,10 @@ int s222()
 //	loop distribution
 //	partial loop vectorizatio recurrence in middle
 
+  int i_nom_7_strip_129;
+  int i_nom_7;
+  int i_nom_6_strip_122;
+  int i_nom_6;
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
 
@@ -1987,11 +2024,20 @@ int s222()
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes/2; nl++) {
-		for (int i = 1; i < LEN; i++) {
-			a[i] += b[i] * c[i];
-			e[i] = e[i - 1] * e[i - 1];
-			a[i] -= b[i] * c[i];
-		}
+//    for (i_nom_6 = 1, i_nom_6_strip_122 = i_nom_6; i_nom_6 <= 31999; (i_nom_6 += 4 , i_nom_6_strip_122 += 1)) {
+//      a_SIMD[i_nom_6_strip_122] = _SIMD_add_ps(a_SIMD[i_nom_6_strip_122],_SIMD_mul_ps(b_SIMD[i_nom_6_strip_122],c_SIMD[i_nom_6_strip_122]));
+//    }
+    for (int i = 1; i < 32000; i++) {
+      e[i] = (e[i - 1] * e[i - 1]);
+    }
+    for (i_nom_7 = 0, i_nom_7_strip_129 = i_nom_7; i_nom_7 <= 31999; (i_nom_7 += 4 , i_nom_7_strip_129 += 1)) {
+      a_SIMD[i_nom_7_strip_129] = _mm_sub_ps(a_SIMD[i_nom_7_strip_129],_mm_mul_ps(b_SIMD[i_nom_7_strip_129],c_SIMD[i_nom_7_strip_129]));
+    }
+//		for (int i = 1; i < LEN; i++) {
+//			a[i] += b[i] * c[i];
+//			e[i] = e[i - 1] * e[i - 1];
+//			a[i] -= b[i] * c[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2064,6 +2110,10 @@ int s1232()
 //	loop interchange
 //	interchanging of triangular loops
 
+  int i_nom_10_strip_166;
+  int i_nom_10;
+  int i_nom_9_strip_162;
+  int i_nom_9;
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
 
@@ -2090,6 +2140,13 @@ int s1232()
 int s233()
 {
 
+  int i_nom_10_strip_166;
+  int i_nom_10;
+  int i_nom_9_strip_162;
+  int i_nom_9;
+  bb_SIMD = ((__SIMD (*)[256UL / 4])bb);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  cc_SIMD = ((__SIMD (*)[256UL / 4])cc);
 //	loop interchange
 //	interchanging with one of two inner loops
 
@@ -2100,14 +2157,26 @@ int s233()
 	start_t = clock();
 
 	for (int nl = 0; nl < 100*(ntimes/LEN2); nl++) {
-		for (int i = 1; i < LEN2; i++) {
-			for (int j = 1; j < LEN2; j++) {
-				aa[j][i] = aa[j-1][i] + cc[j][i];
-			}
-			for (int j = 1; j < LEN2; j++) {
-				bb[j][i] = bb[j][i-1] + cc[j][i];
-			}
-		}
+    for (int j = 1; j < 256; j++) {
+      
+#pragma SIMD
+      for (i_nom_9 = 0, i_nom_9_strip_162 = i_nom_9; i_nom_9 <= 255; (i_nom_9 += 4 , i_nom_9_strip_162 += 1)) {
+        aa_SIMD[j][i_nom_9_strip_162] = _mm_add_ps(aa_SIMD[j - 1][i_nom_9_strip_162],cc_SIMD[j][i_nom_9_strip_162]);
+      }
+      
+#pragma SIMD
+      for (i_nom_10 = 0, i_nom_10_strip_166 = i_nom_10; i_nom_10 <= 255; (i_nom_10 += 4 , i_nom_10_strip_166 += 1)) {
+        bb_SIMD[j][i_nom_10_strip_166] = _mm_add_ps(bb_SIMD[j][i_nom_10_strip_166 - 1],cc_SIMD[j][i_nom_10_strip_166]);
+      }
+    }
+//		for (int i = 1; i < LEN2; i++) {
+//			for (int j = 1; j < LEN2; j++) {
+//				aa[j][i] = aa[j-1][i] + cc[j][i];
+//			}
+//			for (int j = 1; j < LEN2; j++) {
+//				bb[j][i] = bb[j][i-1] + cc[j][i];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2123,6 +2192,10 @@ int s2233()
 //	loop interchange
 //	interchanging with one of two inner loops
 
+  int j_nom_12_strip_189;
+  int j_nom_12;
+  int i_nom_11_strip_183;
+  int i_nom_11;
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
 
@@ -2130,14 +2203,26 @@ int s2233()
 	start_t = clock();
 
 	for (int nl = 0; nl < 100*(ntimes/LEN2); nl++) {
-		for (int i = 1; i < LEN2; i++) {
-			for (int j = 1; j < LEN2; j++) {
-				aa[j][i] = aa[j-1][i] + cc[j][i];
-			}
-			for (int j = 1; j < LEN2; j++) {
-				bb[i][j] = bb[i-1][j] + cc[i][j];
-			}
-		}
+    for (int j = 1; j < 256; j++) {
+      
+      for (i_nom_11 = 0, i_nom_11_strip_183 = i_nom_11; i_nom_11 <= 255; (i_nom_11 += 4 , i_nom_11_strip_183 += 1)) {
+        aa_SIMD[j][i_nom_11_strip_183] = _mm_add_ps(aa_SIMD[j - 1][i_nom_11_strip_183],cc_SIMD[j][i_nom_11_strip_183]);
+      }
+    }
+    for (int i = 1; i < 256; i++) {
+      
+      for (j_nom_12 = 0, j_nom_12_strip_189 = j_nom_12; j_nom_12 <= 255; (j_nom_12 += 4 , j_nom_12_strip_189 += 1)) {
+        bb_SIMD[i][j_nom_12_strip_189] = _mm_add_ps(bb_SIMD[i - 1][j_nom_12_strip_189],cc_SIMD[i][j_nom_12_strip_189]);
+      }
+    }
+//		for (int i = 1; i < LEN2; i++) {
+//			for (int j = 1; j < LEN2; j++) {
+//				aa[j][i] = aa[j-1][i] + cc[j][i];
+//			}
+//			for (int j = 1; j < LEN2; j++) {
+//				bb[i][j] = bb[i-1][j] + cc[i][j];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2153,6 +2238,14 @@ int s235()
 
 //	loop interchanging
 //	imperfectly nested loops
+  int i_nom_13_strip_206;
+  int i_nom_13;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  bb_SIMD = ((__SIMD (*)[256UL / 4])bb);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  cc_SIMD = ((__SIMD (*)[256UL / 4])cc);
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
@@ -2161,12 +2254,20 @@ int s235()
 	start_t = clock();
 
 	for (int nl = 0; nl < 200*(ntimes/LEN2); nl++) {
-		for (int i = 0; i < LEN2; i++) {
-			a[i] += b[i] * c[i];
-			for (int j = 1; j < LEN2; j++) {
-				aa[j][i] = aa[j-1][i] + bb[j][i] * a[i];
-			}
-		}
+    for (int j = 1; j < 256; j++) {
+      
+#pragma SIMD
+      for (i_nom_13 = 0, i_nom_13_strip_206 = i_nom_13; i_nom_13 <= 255; (i_nom_13 += 4 , i_nom_13_strip_206 += 1)) {
+        a_SIMD[i_nom_13_strip_206] = _mm_add_ps(a_SIMD[i_nom_13_strip_206],_SIMD_mul_ps(b_SIMD[i_nom_13_strip_206],c_SIMD[i_nom_13_strip_206]));
+        aa_SIMD[j][i_nom_13_strip_206] = _mm_add_ps(_mm_mul_ps(bb_SIMD[j][i_nom_13_strip_206],a_SIMD[i_nom_13_strip_206]),aa_SIMD[j - 1][i_nom_13_strip_206]);
+      }
+    }
+//		for (int i = 0; i < LEN2; i++) {
+//			a[i] += b[i] * c[i];
+//			for (int j = 1; j < LEN2; j++) {
+//				aa[j][i] = aa[j-1][i] + bb[j][i] * a[i];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2181,6 +2282,12 @@ int s235()
 int s241()
 {
 
+  int i_nom_14_strip_224;
+  int i_nom_14;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
 //	node splitting
 //	preloading necessary to allow vectorization
 
@@ -2191,10 +2298,17 @@ int s241()
 	start_t = clock();
 
 	for (int nl = 0; nl < 2*ntimes; nl++) {
-		for (int i = 0; i < LEN-1; i++) {
-			a[i] = b[i] * c[i  ] * d[i];
-			b[i] = a[i] * a[i+1] * d[i];
-		}
+#pragma SIMD
+    for (i_nom_14 = 0, i_nom_14_strip_224 = i_nom_14; i_nom_14 <= 31998; (i_nom_14 += 4 , i_nom_14_strip_224 += 1)) {
+      a_SIMD[i_nom_14_strip_224] = _mm_mul_ps(_mm_mul_ps(b_SIMD[i_nom_14_strip_224],c_SIMD[i_nom_14_strip_224]),d_SIMD[i_nom_14_strip_224]);
+    }
+    for (int i = 0; i < 32000 - 1; i++) {
+      b[i] = ((a[i] * a[i + 1]) * d[i]);
+    }
+//		for (int i = 0; i < LEN-1; i++) {
+//			a[i] = b[i] * c[i  ] * d[i];
+//			b[i] = a[i] * a[i+1] * d[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2236,6 +2350,13 @@ int s242(float s1, float s2)
 int s243()
 {
 
+  int i_nom_15_strip_243;
+  int i_nom_15;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	node splitting
 //	false dependence cycle breaking
 
@@ -2246,11 +2367,19 @@ int s243()
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN-1; i++) {
-			a[i] = b[i] + c[i  ] * d[i];
-			b[i] = a[i] + d[i  ] * e[i];
-			a[i] = b[i] + a[i+1] * d[i];
-		}
+#pragma SIMD
+    for (i_nom_15 = 0, i_nom_15_strip_243 = i_nom_15; i_nom_15 <= 31998; (i_nom_15 += 4 , i_nom_15_strip_243 += 1)) {
+      a_SIMD[i_nom_15_strip_243] = _SIMD_madd_ps(c_SIMD[i_nom_15_strip_243],d_SIMD[i_nom_15_strip_243],b_SIMD[i_nom_15_strip_243]);
+      b_SIMD[i_nom_15_strip_243] = _SIMD_madd_ps(d_SIMD[i_nom_15_strip_243],e_SIMD[i_nom_15_strip_243],a_SIMD[i_nom_15_strip_243]);
+    }
+    for (int i = 0; i < 32000 - 1; i++) {
+      a[i] = ((a[i + 1] * d[i]) + b[i]);
+    }
+//		for (int i = 0; i < LEN-1; i++) {
+//			a[i] = b[i] + c[i  ] * d[i];
+//			b[i] = a[i] + d[i  ] * e[i];
+//			a[i] = b[i] + a[i+1] * d[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2265,6 +2394,13 @@ int s243()
 int s244()
 {
 
+  int i_nom_16_strip_263;
+  int i_nom_16;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	node splitting
 //	false dependence cycle breaking
 
@@ -2275,11 +2411,19 @@ int s244()
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN-1; ++i) {
-			a[i] = b[i] + c[i] * d[i];
-			b[i] = c[i] + b[i];
-			a[i+1] = b[i] + a[i+1] * d[i];
-		}
+#pragma SIMD
+    for (i_nom_16 = 0, i_nom_16_strip_263 = i_nom_16; i_nom_16 <= 31998; (i_nom_16 += 4 , i_nom_16_strip_263 += 1)) {
+      a_SIMD[i_nom_16_strip_263] = _mm_add_ps(_mm_mul_ps(c_SIMD[i_nom_16_strip_263],d_SIMD[i_nom_16_strip_263]),b_SIMD[i_nom_16_strip_263]);
+      b_SIMD[i_nom_16_strip_263] = _mm_add_ps(c_SIMD[i_nom_16_strip_263],b_SIMD[i_nom_16_strip_263]);
+    }
+    for (int i = 0; i < 32000 - 1; ++i) {
+      a[i + 1] = ((a[i + 1] * d[i]) + b[i]);
+    }
+//		for (int i = 0; i < LEN-1; ++i) {
+//			a[i] = b[i] + c[i] * d[i];
+//			b[i] = c[i] + b[i];
+//			a[i+1] = b[i] + a[i+1] * d[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2292,6 +2436,13 @@ int s244()
 int s1244()
 {
 
+  int i_nom_17_strip_282;
+  int i_nom_17;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	node splitting
 //	cycle with ture and anti dependency
 
@@ -2302,10 +2453,17 @@ int s1244()
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN-1; i++) {
-			a[i] = b[i] + c[i] * c[i] + b[i]*b[i] + c[i];
-			d[i] = a[i] + a[i+1];
-		}
+#pragma SIMD
+    for (i_nom_17 = 0, i_nom_17_strip_282 = i_nom_17; i_nom_17 <= 31998; (i_nom_17 += 4 , i_nom_17_strip_282 += 1)) {
+      a_SIMD[i_nom_17_strip_282] = _mm_add_ps(_mm_add_ps(_mm_mul_ps(b_SIMD[i_nom_17_strip_282],b_SIMD[i_nom_17_strip_282]),_mm_add_ps(_mm_mul_ps(c_SIMD[i_nom_17_strip_282],c_SIMD[i_nom_17_strip_282]),b_SIMD[i_nom_17_strip_282])),c_SIMD[i_nom_17_strip_282]);
+    }
+    for (int i = 0; i < 32000 - 1; i++) {
+      d[i] = (a[i] + a[i + 1]);
+    }
+//		for (int i = 0; i < LEN-1; i++) {
+//			a[i] = b[i] + c[i] * c[i] + b[i]*b[i] + c[i];
+//			d[i] = a[i] + a[i+1];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2318,6 +2476,13 @@ int s1244()
 int s2244()
 {
 
+  int i_nom_18_strip_303;
+  int i_nom_18;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	node splitting
 //	cycle with ture and anti dependency
 
@@ -2328,10 +2493,18 @@ int s2244()
 	start_t = clock();
 
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN-1; i++) {
-			a[i+1] = b[i] + e[i];
-			a[i] = b[i] + c[i];
-		}
+    for (int i = 0; i < 32000 - 1; i++) {
+      a[i + 1] = (b[i] + e[i]);
+    }
+    
+#pragma SIMD
+    for (i_nom_18 = 0, i_nom_18_strip_303 = i_nom_18; i_nom_18 <= 31998; (i_nom_18 += 4 , i_nom_18_strip_303 += 1)) {
+      a_SIMD[i_nom_18_strip_303] = _mm_add_ps(b_SIMD[i_nom_18_strip_303],c_SIMD[i_nom_18_strip_303]);
+    }
+//		for (int i = 0; i < LEN-1; i++) {
+//			a[i+1] = b[i] + e[i];
+//			a[i] = b[i] + c[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2346,6 +2519,13 @@ int s2244()
 int s251()
 {
 
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  int i_nom_19_strip_319;
+  int i_nom_19;
 //	scalar and array expansion
 //	scalar expansion
 
@@ -2356,11 +2536,17 @@ int s251()
 	start_t = clock();
 
 	float s;
+  __SIMD s_SIMD;
 	for (int nl = 0; nl < 4*ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			s = b[i] + c[i] * d[i];
-			a[i] = s * s;
-		}
+#pragma SIMD
+    for (i_nom_19 = 0, i_nom_19_strip_319 = i_nom_19; i_nom_19 <= 31999; (i_nom_19 += 4 , i_nom_19_strip_319 += 1)) {
+      s_SIMD = _mm_add_ps(_mm_mul_ps(c_SIMD[i_nom_19_strip_319],d_SIMD[i_nom_19_strip_319]),b_SIMD[i_nom_19_strip_319]);
+      a_SIMD[i_nom_19_strip_319] = _mm_mul_ps(s_SIMD,s_SIMD);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			s = b[i] + c[i] * d[i];
+//			a[i] = s * s;
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2373,6 +2559,13 @@ int s251()
 int s1251()
 {
 
+  int i_nom_20_strip_337;
+  int i_nom_20;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	scalar and array expansion
 //	scalar expansion
 
@@ -2383,12 +2576,19 @@ int s1251()
 	start_t = clock();
 
 	float s;
+  __SIMD s_SIMD;
 	for (int nl = 0; nl < 4*ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			s = b[i]+c[i];
-			b[i] = a[i]+d[i];
-			a[i] = s*e[i];
-		}
+#pragma SIMD
+    for (i_nom_20 = 0, i_nom_20_strip_337 = i_nom_20; i_nom_20 <= 31999; (i_nom_20 += 4 , i_nom_20_strip_337 += 1)) {
+      s_SIMD = _mm_add_ps(b_SIMD[i_nom_20_strip_337],c_SIMD[i_nom_20_strip_337]);
+      b_SIMD[i_nom_20_strip_337] = _mm_add_ps(a_SIMD[i_nom_20_strip_337],d_SIMD[i_nom_20_strip_337]);
+      a_SIMD[i_nom_20_strip_337] = _mm_mul_ps(s_SIMD,e_SIMD[i_nom_20_strip_337]);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			s = b[i]+c[i];
+//			b[i] = a[i]+d[i];
+//			a[i] = s*e[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2404,19 +2604,36 @@ int s2251()
 //	scalar and array expansion
 //	scalar expansion
 
+  int i_nom_21_strip_356;
+  int i_nom_21;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
 
 	init( "s251 ");
 	start_t = clock();
 
+    __SIMD s_SIMD;
 	for (int nl = 0; nl < ntimes; nl++) {
-		float s = (float)0.0;
-		for (int i = 0; i < LEN; i++) {
-			a[i] = s*e[i];
-			s = b[i]+c[i];
-			b[i] = a[i]+d[i];
-		}
+    float s = (float )0.0;
+    
+#pragma SIMD
+    s_SIMD = _mm_set1_ps(s);
+    for (i_nom_21 = 0, i_nom_21_strip_356 = i_nom_21; i_nom_21 <= 31999; (i_nom_21 += 4 , i_nom_21_strip_356 += 1)) {
+      a_SIMD[i_nom_21_strip_356] = _mm_mul_ps(s_SIMD,e_SIMD[i_nom_21_strip_356]);
+      s_SIMD = _mm_add_ps(b_SIMD[i_nom_21_strip_356],c_SIMD[i_nom_21_strip_356]);
+      b_SIMD[i_nom_21_strip_356] = _mm_add_ps(a_SIMD[i_nom_21_strip_356],d_SIMD[i_nom_21_strip_356]);
+    }
+//		float s = (float)0.0;
+//		for (int i = 0; i < LEN; i++) {
+//			a[i] = s*e[i];
+//			s = b[i]+c[i];
+//			b[i] = a[i]+d[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2458,6 +2675,13 @@ int s3251()
 int s252()
 {
 
+  int i_nom_22_strip_396;
+  int i_nom_22;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	scalar and array expansion
 //	loop with ambiguous scalar temporary
 
@@ -2466,14 +2690,26 @@ int s252()
 	init( "s252 ");
 	start_t = clock();
 
-	float t, s;
+  float t;
+  __SIMD t_SIMD;
+  float s;
+  __SIMD s_SIMD;
 	for (int nl = 0; nl < ntimes; nl++) {
-		t = (float) 0.;
-		for (int i = 0; i < LEN; i++) {
-			s = b[i] * c[i];
-			a[i] = s + t;
-			t = s;
-		}
+    t = ((float )0.0);
+    
+#pragma SIMD
+    t_SIMD = _mm_set1_ps(t);
+    for (i_nom_22 = 0, i_nom_22_strip_396 = i_nom_22; i_nom_22 <= 31999; (i_nom_22 += 4 , i_nom_22_strip_396 += 1)) {
+      s_SIMD = _mm_mul_ps(b_SIMD[i_nom_22_strip_396],c_SIMD[i_nom_22_strip_396]);
+      a_SIMD[i_nom_22_strip_396] = _mm_add_ps(s_SIMD,t_SIMD);
+      t_SIMD = s_SIMD;
+    }
+//		t = (float) 0.;
+//		for (int i = 0; i < LEN; i++) {
+//			s = b[i] * c[i];
+//			a[i] = s + t;
+//			t = s;
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2488,7 +2724,14 @@ int s252()
 
 int s253()
 {
-
+//#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
+  int i_nom_23_strip_415;
+  int i_nom_23;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	scalar and array expansion
 //	scalar expansio assigned under if
 
@@ -2498,15 +2741,30 @@ int s253()
 	init( "s253 ");
 	start_t = clock();
 
-	float s;
+  float s;
+  __SIMD s_SIMD;
+  void *cmpReturn_416;
+  __SIMD cmpReturn;
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			if (a[i] > b[i]) {
-				s = a[i] - b[i] * d[i];
-				c[i] += s;
-				a[i] = s;
-			}
-		}
+#pragma SIMD
+    for (i_nom_23 = 0, i_nom_23_strip_415 = i_nom_23; i_nom_23 <= 31999; (i_nom_23 += 4 , i_nom_23_strip_415 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      _SIMD_cmpgt_ps(a_SIMD[i_nom_23_strip_415],b_SIMD[i_nom_23_strip_415],&cmpReturn_416);
+      s_SIMD = _SIMD_sel_ps(s_SIMD,_SIMD_neg_ps(_SIMD_msub_ps(b_SIMD[i_nom_23_strip_415],d_SIMD[i_nom_23_strip_415],a_SIMD[i_nom_23_strip_415])),&cmpReturn_416);
+      a_SIMD[i_nom_23_strip_415] = _SIMD_sel_ps(a_SIMD[i_nom_23_strip_415],s_SIMD,&cmpReturn_416);
+      c_SIMD[i_nom_23_strip_415] = _SIMD_sel_ps(c_SIMD[i_nom_23_strip_415],_SIMD_add_ps(c_SIMD[i_nom_23_strip_415],s_SIMD),&cmpReturn_416);
+// 	cmpReturn = _mm_cmpgt_ps(a_SIMD[i_nom_23_strip_415],b_SIMD[i_nom_23_strip_415]);	
+//      s_SIMD = _mm_sel_ps(s_SIMD,-(_mm_sub_ps(_mm_mul_ps(b_SIMD[i_nom_23_strip_415],d_SIMD[i_nom_23_strip_415]),a_SIMD[i_nom_23_strip_415])),cmpReturn);
+//      a_SIMD[i_nom_23_strip_415] = _mm_sel_ps(a_SIMD[i_nom_23_strip_415],s_SIMD,cmpReturn);
+//      c_SIMD[i_nom_23_strip_415] = _mm_sel_ps(c_SIMD[i_nom_23_strip_415],_SIMD_add_ps(c_SIMD[i_nom_23_strip_415],s_SIMD),cmpReturn);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			if (a[i] > b[i]) {
+//				s = a[i] - b[i] * d[i];
+//				c[i] += s;
+//				a[i] = s;
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2521,6 +2779,13 @@ int s253()
 int s254()
 {
 
+  int i_nom_24_strip_437;
+  int i_nom_24;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	scalar and array expansion
 //	carry around variable
 
@@ -2530,13 +2795,21 @@ int s254()
 	init( "s254 ");
 	start_t = clock();
 
-	float x;
+  float x;
+  __SIMD x_SIMD;
+  __SIMD half = _mm_set1_ps(.5f);
 	for (int nl = 0; nl < 4*ntimes; nl++) {
 		x = b[LEN-1];
-		for (int i = 0; i < LEN; i++) {
-			a[i] = (b[i] + x) * (float).5;
-			x = b[i];
-		}
+#pragma SIMD
+    x_SIMD = _SIMD_splats_ps(x);
+    for (i_nom_24 = 0, i_nom_24_strip_437 = i_nom_24; i_nom_24 <= 31999; (i_nom_24 += 4 , i_nom_24_strip_437 += 1)) {
+      a_SIMD[i_nom_24_strip_437] = _mm_mul_ps(_mm_add_ps(b_SIMD[i_nom_24_strip_437],x_SIMD),half);
+      x_SIMD = b_SIMD[i_nom_24_strip_437];
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			a[i] = (b[i] + x) * (float).5;
+//			x = b[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2551,6 +2824,13 @@ int s254()
 int s255()
 {
 
+  int i_nom_25_strip_459;
+  int i_nom_25;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
 //	scalar and array expansion
 //	carry around variables, 2 levels
 
@@ -2560,15 +2840,27 @@ int s255()
 	init( "s255 ");
 	start_t = clock();
 
-	float x, y;
+  float x;
+  __SIMD x_SIMD;
+  float y;
+  __SIMD y_SIMD;
+  __SIMD third = _mm_set1_ps(.333f);
 	for (int nl = 0; nl < ntimes; nl++) {
 		x = b[LEN-1];
 		y = b[LEN-2];
-		for (int i = 0; i < LEN; i++) {
-			a[i] = (b[i] + x + y) * (float).333;
-			y = x;
-			x = b[i];
-		}
+#pragma SIMD
+    x_SIMD = _SIMD_splats_ps(x);
+    y_SIMD = _SIMD_splats_ps(y);
+    for (i_nom_25 = 0, i_nom_25_strip_459 = i_nom_25; i_nom_25 <= 31999; (i_nom_25 += 4 , i_nom_25_strip_459 += 1)) {
+      a_SIMD[i_nom_25_strip_459] = _mm_mul_ps(_mm_add_ps(_mm_add_ps(b_SIMD[i_nom_25_strip_459],x_SIMD),y_SIMD),third);
+      y_SIMD = x_SIMD;
+      x_SIMD = b_SIMD[i_nom_25_strip_459];
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			a[i] = (b[i] + x + y) * (float).333;
+//			y = x;
+//			x = b[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2641,6 +2933,14 @@ int s257()
 int s258()
 {
 
+  int i_nom_27_strip_500;
+  int i_nom_27;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
 //	scalar and array expansion
 //	wrap-around scalar under an if
 
@@ -2650,16 +2950,31 @@ int s258()
 	init( "s258 ");
 	start_t = clock();
 
-	float s;
+  float s;
+  __SIMD s_SIMD;
+  __SIMD zero = _mm_set1_ps(0.f);
+  __SIMD one = _mm_set1_ps(1.f);
+  void *cmpReturn_501;
+  __SIMD cmpReturn;
 	for (int nl = 0; nl < ntimes/10; nl++) {
 		s = 0.;
-		for (int i = 0; i < LEN; ++i) {
-			if (a[i] > 0.) {
-				s = d[i] * d[i];
-			}
-			b[i] = s * c[i] + d[i];
-			e[i] = (s + (float)1.) * aa[0][i];
-		}
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
+#pragma SIMD
+    s_SIMD = _SIMD_splats_ps(s);
+    for (i_nom_27 = 0, i_nom_27_strip_500 = i_nom_27; i_nom_27 <= 31999; (i_nom_27 += 4 , i_nom_27_strip_500 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      cmpReturn = _mm_cmpgt_ps(a_SIMD[i_nom_27_strip_500],zero);
+      s_SIMD = _mm_sel_ps(s_SIMD,_mm_mul_ps(d_SIMD[i_nom_27_strip_500],d_SIMD[i_nom_27_strip_500]),cmpReturn);
+      b_SIMD[i_nom_27_strip_500] = _mm_add_ps(_mm_mul_ps(s_SIMD,c_SIMD[i_nom_27_strip_500]),d_SIMD[i_nom_27_strip_500]);
+      e_SIMD[i_nom_27_strip_500] = _mm_mul_ps(_mm_add_ps(s_SIMD,one),aa_SIMD[0][i_nom_27_strip_500]);
+    }
+//		for (int i = 0; i < LEN; ++i) {
+//			if (a[i] > 0.) {
+//				s = d[i] * d[i];
+//			}
+//			b[i] = s * c[i] + d[i];
+//			e[i] = (s + (float)1.) * aa[0][i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2674,6 +2989,14 @@ int s258()
 int s261()
 {
 
+  int i_nom_28_strip_525;
+  int i_nom_28;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
 //	scalar and array expansion
 //	wrap-around scalar under an if
 
@@ -2683,14 +3006,25 @@ int s261()
 	init( "s261 ");
 	start_t = clock();
 
-	float t;
+  float t;
+  __SIMD t_SIMD;
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 1; i < LEN; ++i) {
-			t = a[i] + b[i];
-			a[i] = t + c[i-1];
-			t = c[i] * d[i];
-			c[i] = t;
-		}
+    for (int i = 1; i < 32000; ++i) {
+      t = (a[i] + b[i]);
+      a[i] = (t + c[i - 1]);
+    }
+    
+#pragma SIMD
+    for (i_nom_28 = 1, i_nom_28_strip_525 = i_nom_28; i_nom_28 <= 31999; (i_nom_28 += 4 , i_nom_28_strip_525 += 1)) {
+      t_SIMD = _mm_mul_ps(c_SIMD[i_nom_28_strip_525],d_SIMD[i_nom_28_strip_525]);
+      c_SIMD[i_nom_28_strip_525] = t_SIMD;
+    }
+//		for (int i = 1; i < LEN; ++i) {
+//			t = a[i] + b[i];
+//			a[i] = t + c[i-1];
+//			t = c[i] * d[i];
+//			c[i] = t;
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2703,21 +3037,38 @@ int s261()
 int s271()
 {
 
+  int i_nom_29_strip_542;
+  int i_nom_29;
+  void *cmpReturn_543;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
 //	control flow
 //	loop with singularity handling
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
 
 	init( "s271 ");
 	start_t = clock();
-
+__SIMD cmpReturn;
+__SIMD zero = _mm_set1_ps(0.f);
 	for (int nl = 0; nl < 4*ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			if (b[i] > (float)0.) {
-				a[i] += b[i] * c[i];
-			}
-		}
+#pragma SIMD
+    for (i_nom_29 = 0, i_nom_29_strip_542 = i_nom_29; i_nom_29 <= 31999; (i_nom_29 += 4 , i_nom_29_strip_542 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      cmpReturn = _mm_cmpgt_ps(b_SIMD[i_nom_29_strip_542],zero);
+      a_SIMD[i_nom_29_strip_542] = _mm_sel_ps(a_SIMD[i_nom_29_strip_542],_mm_add_ps(a_SIMD[i_nom_29_strip_542],_mm_mul_ps(b_SIMD[i_nom_29_strip_542],c_SIMD[i_nom_29_strip_542])),cmpReturn);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			if (b[i] > (float)0.) {
+//				a[i] += b[i] * c[i];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2731,7 +3082,18 @@ int s271()
 
 int s272(float t)
 {
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
 
+  int i_nom_30_strip_559;
+  int i_nom_30;
+  __SIMD t_SIMD;
+  void *cmpReturn_560;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
 //	control flow
 //	loop with independent conditional
 
@@ -2740,14 +3102,22 @@ int s272(float t)
 
 	init( "s272 ");
 	start_t = clock();
-
+__SIMD cmpReturn;
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			if (e[i] >= t) {
-				a[i] += c[i] * d[i];
-				b[i] += c[i] * c[i];
-			}
-		}
+#pragma SIMD
+    t_SIMD = _SIMD_splats_ps(t);
+    for (i_nom_30 = 0, i_nom_30_strip_559 = i_nom_30; i_nom_30 <= 31999; (i_nom_30 += 4 , i_nom_30_strip_559 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      cmpReturn = _mm_cmpge_ps(e_SIMD[i_nom_30_strip_559],t_SIMD);
+      a_SIMD[i_nom_30_strip_559] = _mm_sel_ps(a_SIMD[i_nom_30_strip_559],_mm_add_ps(a_SIMD[i_nom_30_strip_559],_mm_mul_ps(c_SIMD[i_nom_30_strip_559],d_SIMD[i_nom_30_strip_559])),cmpReturn);
+      b_SIMD[i_nom_30_strip_559] = _mm_sel_ps(b_SIMD[i_nom_30_strip_559],_mm_add_ps(b_SIMD[i_nom_30_strip_559],_mm_mul_ps(c_SIMD[i_nom_30_strip_559],c_SIMD[i_nom_30_strip_559])),cmpReturn);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			if (e[i] >= t) {
+//				a[i] += c[i] * d[i];
+//				b[i] += c[i] * c[i];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2762,6 +3132,19 @@ int s272(float t)
 int s273()
 {
 
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
+
+  int i_nom_32_strip_584;
+  int i_nom_32;
+  int i_nom_31_strip_578;
+  int i_nom_31;
+  void *cmpReturn_580;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
 //	control flow
 //	simple loop with dependent conditional
 
@@ -2770,14 +3153,24 @@ int s273()
 
 	init( "s273 ");
 	start_t = clock();
-
+__SIMD zero = _mm_set1_ps(0.f);
+__SIMD cmpReturn;
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			a[i] += d[i] * e[i];
-			if (a[i] < (float)0.)
-				b[i] += d[i] * e[i];
-			c[i] += a[i] * d[i];
-		}
+#pragma SIMD
+    for (i_nom_31 = 0, i_nom_31_strip_578 = i_nom_31; i_nom_31 <= 31999; (i_nom_31 += 4 , i_nom_31_strip_578 += 1)) {
+      a_SIMD[i_nom_31_strip_578] = _mm_add_ps(a_SIMD[i_nom_31_strip_578],_mm_mul_ps(d_SIMD[i_nom_31_strip_578],e_SIMD[i_nom_31_strip_578]));
+/* if statement is converted into vectorizaed conditional statement */
+//      cmpReturn = _mm_cmplt_ps(a_SIMD[i_nom_31_strip_578],zero);
+//      b_SIMD[i_nom_31_strip_578] = _mm_sel_ps(b_SIMD[i_nom_31_strip_578],_mm_add_ps(b_SIMD[i_nom_31_strip_578],_mm_mul_ps(d_SIMD[i_nom_31_strip_578],e_SIMD[i_nom_31_strip_578])),cmpReturn);
+      c_SIMD[i_nom_31_strip_578] = _mm_add_ps(c_SIMD[i_nom_31_strip_578],_mm_mul_ps(a_SIMD[i_nom_31_strip_578],d_SIMD[i_nom_31_strip_578]));
+    }
+    
+//		for (int i = 0; i < LEN; i++) {
+//			a[i] += d[i] * e[i];
+//			if (a[i] < (float)0.)
+//				b[i] += d[i] * e[i];
+//			c[i] += a[i] * d[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2792,6 +3185,17 @@ int s273()
 int s274()
 {
 
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
+
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  int i_nom_33_strip_600;
+  int i_nom_33;
+  void *cmpReturn_602;
 //	control flow
 //	complex loop with dependent conditional
 
@@ -2800,16 +3204,25 @@ int s274()
 
 	init( "s274 ");
 	start_t = clock();
-
+__SIMD cmpReturn;
+__SIMD zero = _mm_set1_ps(0.f);
 	for (int nl = 0; nl < ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			a[i] = c[i] + e[i] * d[i];
-			if (a[i] > (float)0.) {
-				b[i] = a[i] + b[i];
-			} else {
-				a[i] = d[i] * e[i];
-			}
-		}
+#pragma SIMD
+    for (i_nom_33 = 0, i_nom_33_strip_600 = i_nom_33; i_nom_33 <= 31999; (i_nom_33 += 4 , i_nom_33_strip_600 += 1)) {
+      a_SIMD[i_nom_33_strip_600] = _mm_add_ps(_mm_mul_ps(e_SIMD[i_nom_33_strip_600],d_SIMD[i_nom_33_strip_600]),c_SIMD[i_nom_33_strip_600]);
+/* if statement is converted into vectorizaed conditional statement */
+      cmpReturn = _mm_cmpgt_ps(a_SIMD[i_nom_33_strip_600],zero);
+      a_SIMD[i_nom_33_strip_600] = _mm_sel_ps(_mm_mul_ps(d_SIMD[i_nom_33_strip_600],e_SIMD[i_nom_33_strip_600]),a_SIMD[i_nom_33_strip_600],cmpReturn);
+      b_SIMD[i_nom_33_strip_600] = _mm_sel_ps(b_SIMD[i_nom_33_strip_600],_mm_add_ps(a_SIMD[i_nom_33_strip_600],b_SIMD[i_nom_33_strip_600]),cmpReturn);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			a[i] = c[i] + e[i] * d[i];
+//			if (a[i] > (float)0.) {
+//				b[i] = a[i] + b[i];
+//			} else {
+//				a[i] = d[i] * e[i];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2824,23 +3237,47 @@ int s274()
 int s275()
 {
 
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
+
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  bb_SIMD = ((__SIMD (*)[256UL / 4])bb);
+  cc_SIMD = ((__SIMD (*)[256UL / 4])cc);
+  int i_nom_34_strip_622;
+  int i_nom_34;
+  void *cmpReturn_623;
 //	control flow
 //	if around inner loop, interchanging needed
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
+__SIMD cmpReturn;
+__SIMD zero = _mm_set1_ps(0.f);
 
 	init( "s275 ");
 	start_t = clock();
 
 	for (int nl = 0; nl < 10*(ntimes/LEN2); nl++) {
-		for (int i = 0; i < LEN2; i++) {
-			if (aa[0][i] > (float)0.) {
-				for (int j = 1; j < LEN2; j++) {
-					aa[j][i] = aa[j-1][i] + bb[j][i] * cc[j][i];
-				}
-			}
-		}
+    for (int j = 1; j < 256; j++) {
+      
+#pragma SIMD
+      for (i_nom_34 = 0, i_nom_34_strip_622 = i_nom_34; i_nom_34 <= 255; (i_nom_34 += 4 , i_nom_34_strip_622 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+        cmpReturn  = _mm_cmpgt_ps(aa_SIMD[0][i_nom_34_strip_622],zero);
+        aa_SIMD[j][i_nom_34_strip_622] = _mm_sel_ps(aa_SIMD[j][i_nom_34_strip_622],_mm_add_ps(_mm_mul_ps(bb_SIMD[j][i_nom_34_strip_622],cc_SIMD[j][i_nom_34_strip_622]),aa_SIMD[j - 1][i_nom_34_strip_622]),cmpReturn);
+      }
+    }
+//		for (int i = 0; i < LEN2; i++) {
+//			if (aa[0][i] > (float)0.) {
+//				for (int j = 1; j < LEN2; j++) {
+//					aa[j][i] = aa[j-1][i] + bb[j][i] * cc[j][i];
+//				}
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -2853,6 +3290,16 @@ int s275()
 int s2275()
 {
 
+  int i_nom_35_strip_640;
+  int i_nom_35;
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  bb_SIMD = ((__SIMD (*)[256UL / 4])bb);
+  cc_SIMD = ((__SIMD (*)[256UL / 4])cc);
 //	loop distribution is needed to be able to interchange
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
@@ -2862,12 +3309,20 @@ int s2275()
 	start_t = clock();
 
 	for (int nl = 0; nl < 100*(ntimes/LEN2); nl++) {
-		for (int i = 0; i < LEN2; i++) {
-			for (int j = 0; j < LEN2; j++) {
-				aa[j][i] = aa[j][i] + bb[j][i] * cc[j][i];
-			}
-			a[i] = b[i] + c[i] * d[i];
-		}
+    for (int j = 0; j < 256; j++) {
+      
+#pragma SIMD
+      for (i_nom_35 = 0, i_nom_35_strip_640 = i_nom_35; i_nom_35 <= 255; (i_nom_35 += 4 , i_nom_35_strip_640 += 1)) {
+        aa_SIMD[j][i_nom_35_strip_640] = _mm_add_ps(_mm_mul_ps(bb_SIMD[j][i_nom_35_strip_640],cc_SIMD[j][i_nom_35_strip_640]),aa_SIMD[j][i_nom_35_strip_640]);
+        a_SIMD[i_nom_35_strip_640] = _mm_add_ps(_mm_mul_ps(c_SIMD[i_nom_35_strip_640],d_SIMD[i_nom_35_strip_640]),b_SIMD[i_nom_35_strip_640]);
+      }
+    }
+//		for (int i = 0; i < LEN2; i++) {
+//			for (int j = 0; j < LEN2; j++) {
+//				aa[j][i] = aa[j][i] + bb[j][i] * cc[j][i];
+//			}
+//			a[i] = b[i] + c[i] * d[i];
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -3094,20 +3549,42 @@ int s2710( float x)
 int s2711()
 {
 
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
+
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  bb_SIMD = ((__SIMD (*)[256UL / 4])bb);
+  cc_SIMD = ((__SIMD (*)[256UL / 4])cc);
+  int i_nom_36_strip_677;
+  int i_nom_36;
+  void *cmpReturn_678;
 //	control flow
 //	semantic if removal
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
+__SIMD cmpReturn;
+__SIMD zero = _mm_set1_ps(0.f);
+
 	init( "s2711");
 	start_t = clock();
 
 	for (int nl = 0; nl < 4*ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			if (b[i] != (float)0.0) {
-				a[i] += b[i] * c[i];
-			}
-		}
+#pragma SIMD
+    for (i_nom_36 = 0, i_nom_36_strip_677 = i_nom_36; i_nom_36 <= 31999; (i_nom_36 += 4 , i_nom_36_strip_677 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      cmpReturn = _mm_cmpeq_ps(b_SIMD[i_nom_36_strip_677],zero);
+      a_SIMD[i_nom_36_strip_677] = _mm_sel_ps(_mm_add_ps(a_SIMD[i_nom_36_strip_677],_mm_mul_ps(b_SIMD[i_nom_36_strip_677],c_SIMD[i_nom_36_strip_677])),a_SIMD[i_nom_36_strip_677],cmpReturn);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			if (b[i] != (float)0.0) {
+//				a[i] += b[i] * c[i];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -3122,21 +3599,41 @@ int s2711()
 int s2712()
 {
 
+#define _mm_sel_ps(a,b,c) _mm_or_ps(_mm_andnot_ps(c,a),_mm_and_ps(c,b)) 
+
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  bb_SIMD = ((__SIMD (*)[256UL / 4])bb);
+  int i_nom_37_strip_694;
+  int i_nom_37;
+  void *cmpReturn_695;
 //	control flow
 //	if to elemental min
 
 	clock_t start_t, end_t, clock_dif; double clock_dif_sec;
 
+__SIMD cmpReturn;
+__SIMD zero = _mm_set1_ps(0.f);
 
 	init( "s2712");
 	start_t = clock();
 
 	for (int nl = 0; nl < 4*ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			if (a[i] > b[i]) {
-				a[i] += b[i] * c[i];
-			}
-		}
+#pragma SIMD
+    for (i_nom_37 = 0, i_nom_37_strip_694 = i_nom_37; i_nom_37 <= 31999; (i_nom_37 += 4 , i_nom_37_strip_694 += 1)) {
+/* if statement is converted into vectorizaed conditional statement */
+      cmpReturn = _mm_cmpgt_ps(a_SIMD[i_nom_37_strip_694],b_SIMD[i_nom_37_strip_694]);
+      a_SIMD[i_nom_37_strip_694] = _mm_sel_ps(a_SIMD[i_nom_37_strip_694],_mm_add_ps(a_SIMD[i_nom_37_strip_694],_mm_mul_ps(b_SIMD[i_nom_37_strip_694],c_SIMD[i_nom_37_strip_694])),cmpReturn);
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			if (a[i] > b[i]) {
+//				a[i] += b[i] * c[i];
+//			}
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -3180,6 +3677,15 @@ int s281()
 int s1281()
 {
 
+  a_SIMD = ((__SIMD *)a);
+  b_SIMD = ((__SIMD *)b);
+  c_SIMD = ((__SIMD *)c);
+  d_SIMD = ((__SIMD *)d);
+  e_SIMD = ((__SIMD *)e);
+  aa_SIMD = ((__SIMD (*)[256UL / 4])aa);
+  bb_SIMD = ((__SIMD (*)[256UL / 4])bb);
+  int i_nom_38_strip_713;
+  int i_nom_38;
 //	crossing thresholds
 //	index set splitting
 //	reverse data access
@@ -3189,14 +3695,21 @@ int s1281()
 
 	init( "s281 ");
 	start_t = clock();
-
-	float x;
+__SIMD one = _mm_set1_ps(1.f);
+  float x;
+  __SIMD x_SIMD;
 	for (int nl = 0; nl < 4*ntimes; nl++) {
-		for (int i = 0; i < LEN; i++) {
-			x = b[i]*c[i]+a[i]*d[i]+e[i];
-			a[i] = x-(float)1.0;
-			b[i] = x;
-		}
+#pragma SIMD
+    for (i_nom_38 = 0, i_nom_38_strip_713 = i_nom_38; i_nom_38 <= 31999; (i_nom_38 += 4 , i_nom_38_strip_713 += 1)) {
+      x_SIMD = _mm_add_ps(_mm_add_ps(_mm_mul_ps(a_SIMD[i_nom_38_strip_713],d_SIMD[i_nom_38_strip_713]),_mm_mul_ps(b_SIMD[i_nom_38_strip_713],c_SIMD[i_nom_38_strip_713])),e_SIMD[i_nom_38_strip_713]);
+      a_SIMD[i_nom_38_strip_713] = _mm_sub_ps(x_SIMD,one);
+      b_SIMD[i_nom_38_strip_713] = x_SIMD;
+    }
+//		for (int i = 0; i < LEN; i++) {
+//			x = b[i]*c[i]+a[i]*d[i]+e[i];
+//			a[i] = x-(float)1.0;
+//			b[i] = x;
+//		}
 		dummy(a, b, c, d, e, aa, bb, cc, 0.);
 	}
 	end_t = clock(); clock_dif = end_t - start_t;
@@ -5431,157 +5944,157 @@ int main(){
 	set(ip, &s1, &s2);
 	printf("Loop \t Time(Sec) \t Checksum \n");
 
-	s000();
-	s111();
-	s1111();
-	s112();
-	s1112();
-	s113();
-	s1113();
-	s114();
-	s115();
-	s1115();
-	s116();
-	s118();
-	s119();
-	s1119();
-	s121();
-	s122(n1,n3);
-	s123();
-  s124();
-	s125();
-	s126();
-	s127();
-	s128();
-	s131();
-	s132();
-	s141();
-	s151();
-	s152();
-	s161();
-	s1161();
-	s162(n1);
-	s171(n1);
-	s172(n1,n3);
-	s173();
-	s174(LEN/2);
-	s175(n1);
-	s176();
-	s211();
-	s212();
-	s1213();
-	s221();
-	s1221();
-	s222();
-	s231();
-	s232();
-	s1232();
-	s233();
-	s2233();
-	s235();
-	s241();
-	s242(s1, s2);
-	s243();
-	s244();
-	s1244();
-	s2244();
-	s251();
-	s1251();
-	s2251();
-	s3251();
-	s252();
-	s253();
-	s254();
-	s255();
-	s256();
-	s257();
-	s258();
-	s261();
-	s271();
-	s272(s1);
-	s273();
-	s274();
-	s275();
-	s2275();
-	s276();
-	s277();
-	s278();
-	s279();
-	s1279();
-	s2710(s1);
-	s2711();
-	s2712();
-	s281();
+//	s000();
+//	s111();
+//	s1111();
+//	s112();
+//	s1112();
+//	s113();
+//	s1113();
+//	s114();
+//	s115();
+//	s1115();
+//	s116();
+//	s118();
+//	s119();
+//	s1119();
+//	s121();
+//	s122(n1,n3);
+//	s123();
+//  s124();
+//	s125();
+//	s126();
+//	s127();
+//	s128();
+//	s131();
+//	s132();
+//	s141();
+//	s151();
+//	s152();
+//	s161();
+//	s1161();
+//	s162(n1);
+//	s171(n1);
+//	s172(n1,n3);
+//	s173();
+//	s174(LEN/2);
+//	s175(n1);
+//	s176();
+//	s211();
+//	s212();
+//	s1213();
+//	s221();
+//	s1221();
+//	s222();
+//	s231();
+//	s232();
+//	s1232();
+//	s233();
+//	s2233();
+//	s235();
+//	s241();
+//	s242(s1, s2);
+//	s243();
+//	s244();
+//	s1244();
+//	s2244();
+//	s251();
+//	s1251();
+//	s2251();
+//	s3251();
+//	s252();
+//	s253();
+//	s254();
+//	s255();
+//	s256();
+//	s257();
+//	s258();
+//	s261();
+//	s271();
+//	s272(s1);
+//	s273();
+//	s274();
+//	s275();
+//	s2275();
+//	s276();
+//	s277();
+//	s278();
+//	s279();
+//	s1279();
+//	s2710(s1);
+//	s2711();
+//	s2712();
+//	s281();
 	s1281();
-	s291();
-	s292();
-	s293();
-	s2101();
-	s2102();
-	s2111();
-	s311();
-	s31111();
-	s312();
-	s313();
-	s314();
-	s315();
-	s316();
-	s317();
-	s318(n1);
-	s319();
-	s3110();
-	s13110();
-	s3111();
-	s3112();
-	s3113();
-	s321();
-	s322();
-	s323();
-	s331();
-	s332(s1);
-	s341();
-	s342();
-	s343();
-	s351();
-	s1351();
-	s352();
-	s353(ip);
-	s421();
-	s1421();
-	s422();
-	s423();
-	s424();
-	s431();
-	s441();
-	s442();
-	s443();
-	s451();
-	s452();
-	s453();
-	s471();
-	s481();
-	s482();
-	s491(ip);
-	s4112(ip, s1);
-	s4113(ip);
-	s4114(ip,n1);
-	s4115(ip);
-	s4116(ip, LEN2/2, n1);
-	s4117();
-	s4121();
-	va();
-	vag(ip);
-	vas(ip);
-	vif();
-	vpv();
-	vtv();
-	vpvtv();
-	vpvts(s1);
-	vpvpv();
-	vtvtv();
-	vsumr();
-	vdotr();
-	vbor();
+//	s291();
+//	s292();
+//	s293();
+//	s2101();
+//	s2102();
+//	s2111();
+//	s311();
+//	s31111();
+//	s312();
+//	s313();
+//	s314();
+//	s315();
+//	s316();
+//	s317();
+//	s318(n1);
+//	s319();
+//	s3110();
+//	s13110();
+//	s3111();
+//	s3112();
+//	s3113();
+//	s321();
+//	s322();
+//	s323();
+//	s331();
+//	s332(s1);
+//	s341();
+//	s342();
+//	s343();
+//	s351();
+//	s1351();
+//	s352();
+//	s353(ip);
+//	s421();
+//	s1421();
+//	s422();
+//	s423();
+//	s424();
+//	s431();
+//	s441();
+//	s442();
+//	s443();
+//	s451();
+//	s452();
+//	s453();
+//	s471();
+//	s481();
+//	s482();
+//	s491(ip);
+//	s4112(ip, s1);
+//	s4113(ip);
+//	s4114(ip,n1);
+//	s4115(ip);
+//	s4116(ip, LEN2/2, n1);
+//	s4117();
+//	s4121();
+//	va();
+//	vag(ip);
+//	vas(ip);
+//	vif();
+//	vpv();
+//	vtv();
+//	vpvtv();
+//	vpvts(s1);
+//	vpvpv();
+//	vtvtv();
+//	vsumr();
+//	vdotr();
+//	vbor();
 	return 0;
 }
 
